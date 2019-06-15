@@ -20,6 +20,7 @@ class movieInfo(object):
         self.movieRateSum = 0
         self.movieCount = 0
         self.movieRate = 0
+        self.movieTags = []
         
 
 class H1LinProb(object):
@@ -112,7 +113,13 @@ class Trie():
             moviesHashTable.map[movieID].movieRate = moviesHashTable.map[movieID].movieRateSum / moviesHashTable.map[movieID].movieCount
         reader.close()
 
-
+        reader = open("tag.csv", "r")
+        reader.readline()
+        for line in reader:
+            stringLine = line.split(',')
+            movieID = int(stringLine[1])
+            movieTag = stringLine[2]
+            moviesHashTable.map[movieID].movieTags.append(movieTag)
         # for key in keys: 
         #     self.insert(key) # inserting one key to the trie. 
   
@@ -239,6 +246,31 @@ def printTopMovies(moviesHashTable, topNumber, userGenre):
               "Rating: " + str(filteredMovies[i].movieRate),
               "Count: " + str(filteredMovies[i].movieCount))
 
+
+def filterByTag(moviesHashTable, tagList):
+    taggedMovies = []
+    hasAllTags = True
+    for i in range(0, len(moviesHashTable.map)):
+        if moviesHashTable.map[i] != None:
+            for tag in tagList:
+                tag = '"' + tag + '"'
+                if not tag in moviesHashTable.map[i].movieTags:
+                    hasAllTags = False
+                    break
+            if hasAllTags == True:
+                taggedMovies.append(moviesHashTable.map[i])
+            hasAllTags = True    
+            
+    return taggedMovies
+
+def printTaggedMovies(moviesHashTable, tagList):
+    taggedMovies = filterByTag(moviesHashTable, tagList)
+    for i in range(0, len(taggedMovies)):
+        print("Title: " + taggedMovies[i].movieName,
+              "Genres: " + taggedMovies[i].movieGenres,
+              "Rating: " + str(taggedMovies[i].movieRate),
+              "Count: " + str(taggedMovies[i].movieCount))
+
 t = Trie() 
 moviesHashTable = H1LinProb(131381) 
 # creating the trie structure with the  
@@ -271,5 +303,10 @@ while userInput != "exit":
         topNumber = userInput[1]
         userGenre = userInput[2]
         printTopMovies(moviesHashTable, topNumber, userGenre)
+    elif "tags " in userInput:
+        userInput = userInput.split("'")
+        tagList = userInput[1::2]
+        printTaggedMovies(moviesHashTable, tagList)
+
 
     
