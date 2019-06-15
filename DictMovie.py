@@ -189,9 +189,56 @@ class Trie():
 
         return 1
 
-key = "Star"
+# Python program for implementation of MergeSort 
+def mergeSort(arr): 
+    if len(arr) >1: 
+        mid = len(arr)//2 #Finding the mid of the array 
+        L = arr[:mid] # Dividing the array elements  
+        R = arr[mid:] # into 2 halves 
+  
+        mergeSort(L) # Sorting the first half 
+        mergeSort(R) # Sorting the second half 
+  
+        i = j = k = 0
+          
+        # Copy data to temp arrays L[] and R[] 
+        while i < len(L) and j < len(R): 
+            if L[i].movieRate > R[j].movieRate: 
+                arr[k] = L[i] 
+                i+=1
+            else: 
+                arr[k] = R[j] 
+                j+=1
+            k+=1
+          
+        # Checking if any element was left 
+        while i < len(L): 
+            arr[k] = L[i] 
+            i+=1
+            k+=1
+          
+        while j < len(R): 
+            arr[k] = R[j] 
+            j+=1
+            k+=1
 
-# creating trie object 
+def filterByGenre(moviesHashTable, userGenre):
+    topList = []
+    for i in range(0, len(moviesHashTable.map)):
+        if moviesHashTable.map[i] != None:
+            if userGenre in moviesHashTable.map[i].movieGenres and moviesHashTable.map[i].movieCount > 999:
+                topList.append(moviesHashTable.map[i])
+    return topList
+
+def printTopMovies(moviesHashTable, topNumber, userGenre):
+    filteredMovies = filterByGenre(moviesHashTable, userGenre)
+    mergeSort(filteredMovies)
+    for i in range(0, int(topNumber)):
+        print("Title: " + filteredMovies[i].movieName,
+              "Genres: " + filteredMovies[i].movieGenres,
+              "Rating: " + str(filteredMovies[i].movieRate),
+              "Count: " + str(filteredMovies[i].movieCount))
+
 t = Trie() 
 moviesHashTable = H1LinProb(131381) 
 # creating the trie structure with the  
@@ -219,7 +266,10 @@ while userInput != "exit":
             "Count: " + str(moviesHashTable.map[int(element)].movieCount)
             )
         t.word_list = []    
-    
-
+    elif "top " in userInput:
+        userInput = userInput.split(' ')
+        topNumber = userInput[1]
+        userGenre = userInput[2]
+        printTopMovies(moviesHashTable, topNumber, userGenre)
 
     
