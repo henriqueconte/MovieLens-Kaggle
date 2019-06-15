@@ -17,7 +17,10 @@ class movieInfo(object):
         self.movieID = movieID
         self.movieName = movieName
         self.movieGenres = movieGenres
-
+        self.movieRateSum = 0
+        self.movieCount = 0
+        self.movieRate = 0
+        
 
 class H1LinProb(object):
     """ Busca Linear | h1 """
@@ -96,6 +99,19 @@ class Trie():
             actualMovieInfo = movieInfo(movieID, movieName, movieGenre)
             self.insert(movieName,movieID)
             moviesHashTable.insere(intMovieID, actualMovieInfo)
+        reader.close()
+
+        reader = open("rating.csv", "r")
+        reader.readline()
+        for line in reader:
+            stringLine = line.split(',')
+            movieID = int(stringLine[1])
+            userRate = float(stringLine[2])
+            moviesHashTable.map[movieID].movieRateSum += userRate
+            moviesHashTable.map[movieID].movieCount += 1
+            moviesHashTable.map[movieID].movieRate = moviesHashTable.map[movieID].movieRateSum / moviesHashTable.map[movieID].movieCount
+        reader.close()
+
 
         # for key in keys: 
         #     self.insert(key) # inserting one key to the trie. 
@@ -184,13 +200,26 @@ t.formTrie(moviesHashTable)
   
 # autocompleting the given key using  
 # our trie structure. 
-t.printAutoSuggestions(key)
 
-for element in t.word_list:
-    print(
-     "ID: " + moviesHashTable.map[int(element)].movieID,
-     "Title: " + moviesHashTable.map[int(element)].movieName,
-     "Genres: " + moviesHashTable.map[int(element)].movieGenres
-     )
+
+
+userInput = "default"
+
+while userInput != "exit":
+    print("Search movies by typing movie, user, top, or tags")
+    userInput = raw_input()
+    if "movie " in userInput:
+        t.printAutoSuggestions(userInput[6:])
+        for element in t.word_list:
+            print(
+            "ID: " + moviesHashTable.map[int(element)].movieID,
+            "Title: " + moviesHashTable.map[int(element)].movieName,
+            "Genres: " + moviesHashTable.map[int(element)].movieGenres, 
+            "Rate: " + str(moviesHashTable.map[int(element)].movieRate),
+            "Count: " + str(moviesHashTable.map[int(element)].movieCount)
+            )
+        t.word_list = []    
     
+
+
     
