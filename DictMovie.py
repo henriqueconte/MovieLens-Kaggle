@@ -5,6 +5,59 @@
 
 import re
 
+
+# def h1(s,m): # funcao de hash 1
+#     ret = 0
+#     for i in range(len(s)):
+#         ret += ord(s[i])**2 % m
+#     ret %= m
+#     return ret
+class movieInfo(object):
+    def __init__(self, movieID, movieName, movieGenres):
+        self.movieID = movieID
+        self.movieName = movieName
+        self.movieGenres = movieGenres
+
+
+class H1LinProb(object):
+    """ Busca Linear | h1 """
+    def __init__(self,size):
+        self.size = size
+        self.map = [None] * self.size
+        self.used = [False] * self.size
+
+    # def hf(self,key):
+    #     return h1(key,self.size)
+
+    def insere(self,key, movieInfo):
+        key_hash = key
+        h = key_hash
+        collisions = 0
+        while self.map[h] is not None:
+            h = (h+1) % self.size
+            collisions += 1
+            if h == key_hash:
+                print("\nHash Full\n")
+                return -1
+        #self.map[h] = [key,movieInfo]
+        self.map[h] = movieInfo
+        self.used[h] = True
+        return collisions
+
+    def pesquisa(self,key):
+        key_hash = key
+        h = key_hash
+        acessos = 0
+
+        while self.used[h] == True:
+            acessos += 1
+            if self.map[h][0] == key:
+                return acessos
+            h = (h+1) % self.size
+            if h == key_hash:
+                return self.map[key]
+        return self.map[key]
+
 class TrieNode(): 
     def __init__(self): 
           
@@ -20,7 +73,7 @@ class Trie():
         self.root = TrieNode() 
         self.word_list = [] 
   
-    def formTrie(self): 
+    def formTrie(self, moviesHashTable): 
           
         # Forms a trie structure with the given set of strings 
         # if it does not exists already else it merges the key 
@@ -32,10 +85,17 @@ class Trie():
             #stringLine = re.findall(r"[\w']+", line)
             stringLine = re.split(r',(?=")', line)
             movieID = stringLine[0]
+            intMovieID = int(movieID)
             movieName = stringLine[1]
             movieName = movieName[1:]
             movieName = movieName[:-1]
+            movieGenre = stringLine[2]
+            movieGenre = movieGenre[:-3]
+            movieGenre = movieGenre[1:]
+
+            actualMovieInfo = movieInfo(movieID, movieName, movieGenre)
             self.insert(movieName,movieID)
+            moviesHashTable.insere(intMovieID, actualMovieInfo)
 
         # for key in keys: 
         #     self.insert(key) # inserting one key to the trie. 
@@ -50,7 +110,7 @@ class Trie():
         for a in list(key): 
             if not node.children.get(a): 
                 node.children[a] = TrieNode() 
-
+  
             node = node.children[a] 
   
         node.last = True
@@ -103,7 +163,6 @@ class Trie():
         if not_found: 
             return 0
         elif node.last and not node.children: 
-            print(key)
             printedMovie = True
 
         if printedMovie == False:
@@ -118,11 +177,20 @@ key = "Star"
 
 # creating trie object 
 t = Trie() 
-  
+moviesHashTable = H1LinProb(131381) 
 # creating the trie structure with the  
 # given set of strings. 
-t.formTrie() 
+t.formTrie(moviesHashTable) 
   
 # autocompleting the given key using  
 # our trie structure. 
 t.printAutoSuggestions(key)
+
+for element in t.word_list:
+    print(
+     "ID: " + moviesHashTable.map[int(element)].movieID,
+     "Title: " + moviesHashTable.map[int(element)].movieName,
+     "Genres: " + moviesHashTable.map[int(element)].movieGenres
+     )
+    
+    
