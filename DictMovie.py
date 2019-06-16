@@ -1,17 +1,5 @@
-# Python3 program to demonstrate auto-complete  
-# feature using Trie data structure. 
-# Note: This is a basic implementation of Trie 
-# and not the most optimized one. 
-
 import re
 
-
-# def h1(s,m): # funcao de hash 1
-#     ret = 0
-#     for i in range(len(s)):
-#         ret += ord(s[i])**2 % m
-#     ret %= m
-#     return ret
 class movieInfo(object):
     def __init__(self, movieID, movieName, movieGenres):
         self.movieID = movieID
@@ -30,9 +18,6 @@ class H1LinProb(object):
         self.map = [None] * self.size
         self.used = [False] * self.size
 
-    # def hf(self,key):
-    #     return h1(key,self.size)
-
     def insere(self,key, movieInfo):
         key_hash = key
         h = key_hash
@@ -43,7 +28,6 @@ class H1LinProb(object):
             if h == key_hash:
                 print("\nHash Full\n")
                 return -1
-        #self.map[h] = [key,movieInfo]
         self.map[h] = movieInfo
         self.used[h] = True
         return collisions
@@ -66,7 +50,7 @@ class TrieNode():
     def __init__(self): 
           
         # Initialising one node for trie 
-        self.children = {} 
+        self.children = [None] * 330 
         self.last = False
         self.movieID = 0
 
@@ -131,10 +115,10 @@ class Trie():
         node = self.root 
         #print(list(key))
         for a in list(key): 
-            if not node.children.get(a): 
-                node.children[a] = TrieNode() 
+            if not node.children[ord(a)]: 
+                node.children[ord(a)] = TrieNode() 
   
-            node = node.children[a] 
+            node = node.children[ord(a)] 
   
         node.last = True
         node.movieID = movieID
@@ -147,23 +131,29 @@ class Trie():
         found = True
   
         for a in list(key): 
-            if not node.children.get(a): 
+            if not node.children[ord(a)]: 
                 found = False
                 break
   
-            node = node.children[a] 
-  
-        return node and node.last and found 
+            node = node.children[ord(a)] 
+
+        return node 
   
     def suggestionsRec(self, node, word): 
           
         # Method to recursively traverse the trie 
-        # and return a whole word.  
-        if node.last: 
-            self.word_list.append(node.movieID) 
-  
-        for a,n in node.children.items(): 
-            self.suggestionsRec(n, word + a) 
+        # and return a whole word.
+
+        if node == None:
+            return
+        
+        if node.movieID != 0:
+            self.word_list.append(node.movieID)
+        
+        for element in  node.children:
+            self.suggestionsRec(element, word)
+
+            
   
     def printAutoSuggestions(self, key): 
           
@@ -176,12 +166,12 @@ class Trie():
         printedMovie = False
 
         for a in list(key): 
-            if not node.children.get(a): 
+            if not node.children[ord(a)]: 
                 not_found = True
                 break
   
             temp_word += a 
-            node = node.children[a] 
+            node = node.children[ord(a)] 
   
         if not_found: 
             return 0
@@ -189,6 +179,7 @@ class Trie():
             printedMovie = True
 
         if printedMovie == False:
+           node = self.search(key)
            self.suggestionsRec(node, temp_word) 
   
         #    for s in self.word_list: 
