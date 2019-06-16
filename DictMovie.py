@@ -25,6 +25,16 @@ class MovieHashTable(object):
     def pesquisa(self,key):
         return self.map[key]
 
+    def remove(self,key):
+        if self.map[key] is not None:
+            for i in range(len(self.map[key])):
+                if self.map[key][i][0] == key:
+                    self.map[key].pop(i)
+                    if len(self.map[key]) == 0:
+                        self.map[key] = None
+                    return True
+        return False
+
 
 class TrieNode(): 
     def __init__(self): 
