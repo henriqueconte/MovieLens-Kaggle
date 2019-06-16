@@ -11,7 +11,7 @@ class movieInfo(object):
         self.movieTags = []
         
 
-class H1LinProb(object):
+class MovieHashTable(object):
     """ Busca Linear | h1 """
     def __init__(self,size):
         self.size = size
@@ -19,39 +19,19 @@ class H1LinProb(object):
         self.used = [False] * self.size
 
     def insere(self,key, movieInfo):
-        key_hash = key
-        h = key_hash
-        collisions = 0
-        while self.map[h] is not None:
-            h = (h+1) % self.size
-            collisions += 1
-            if h == key_hash:
-                print("\nHash Full\n")
-                return -1
-        self.map[h] = movieInfo
-        self.used[h] = True
-        return collisions
+        self.map[key] = movieInfo
+        self.used[key] = True
 
     def pesquisa(self,key):
-        key_hash = key
-        h = key_hash
-        acessos = 0
-
-        while self.used[h] == True:
-            acessos += 1
-            if self.map[h][0] == key:
-                return acessos
-            h = (h+1) % self.size
-            if h == key_hash:
-                return self.map[key]
         return self.map[key]
+
 
 class TrieNode(): 
     def __init__(self): 
           
         # Initialising one node for trie 
         self.children = [None] * 330 
-        self.last = False
+        self.leaf = False
         self.movieID = 0
 
 class Trie(): 
@@ -59,9 +39,9 @@ class Trie():
           
         # Initialising the trie structure. 
         self.root = TrieNode() 
-        self.word_list = [] 
+        self.movieIDList = [] 
   
-    def formTrie(self, moviesHashTable): 
+    def buildTrie(self, moviesHashTable): 
           
         # Forms a trie structure with the given set of strings 
         # if it does not exists already else it merges the key 
@@ -69,18 +49,13 @@ class Trie():
         reader = open("movie.csv", "r")
         reader.readline()
         for line in reader:
-            #stringLine = line.split(',(')
-            #stringLine = re.findall(r"[\w']+", line)
             stringLine = re.split(r',(?=")', line)
             movieID = stringLine[0]
             intMovieID = int(movieID)
             movieName = stringLine[1]
-            movieName = movieName[1:]
-            movieName = movieName[:-1]
+            movieName = movieName[1:-1]
             movieGenre = stringLine[2]
-            movieGenre = movieGenre[:-3]
-            movieGenre = movieGenre[1:]
-
+            movieGenre = movieGenre[1:-3]
             actualMovieInfo = movieInfo(movieID, movieName, movieGenre)
             self.insert(movieName,movieID)
             moviesHashTable.insere(intMovieID, actualMovieInfo)
@@ -104,42 +79,40 @@ class Trie():
             movieID = int(stringLine[1])
             movieTag = stringLine[2]
             moviesHashTable.map[movieID].movieTags.append(movieTag)
-        # for key in keys: 
-        #     self.insert(key) # inserting one key to the trie. 
+        reader.close()
   
-    def insert(self, key, movieID): 
+    def insert(self, movieName, movieID): 
           
-        # Inserts a key into trie if it does not exist already. 
-        # And if the key is a prefix of the trie node, just  
+        # Inserts a movieName into trie if it does not exist already. 
+        # And if the movieName is a prefix of the trie node, just  
         # marks it as leaf node. 
         node = self.root 
-        #print(list(key))
-        for a in list(key): 
-            if not node.children[ord(a)]: 
-                node.children[ord(a)] = TrieNode() 
+        for letter in list(movieName): 
+            if not node.children[ord(letter)]: 
+                node.children[ord(letter)] = TrieNode() 
   
-            node = node.children[ord(a)] 
+            node = node.children[ord(letter)] 
   
-        node.last = True
+        node.leaf = True
         node.movieID = movieID
 
-    def search(self, key): 
+    def search(self, movieName): 
           
-        # Searches the given key in trie for a full match 
+        # Searches the given movieName in trie for a full match 
         # and returns True on success else returns False. 
         node = self.root 
         found = True
   
-        for a in list(key): 
-            if not node.children[ord(a)]: 
+        for letter in list(movieName): 
+            if not node.children[ord(letter)]: 
                 found = False
                 break
   
-            node = node.children[ord(a)] 
+            node = node.children[ord(letter)] 
 
         return node 
   
-    def suggestionsRec(self, node, word): 
+    def suggestionsRec(self, node): 
           
         # Method to recursively traverse the trie 
         # and return a whole word.
@@ -148,77 +121,72 @@ class Trie():
             return
         
         if node.movieID != 0:
-            self.word_list.append(node.movieID)
+            self.movieIDList.append(node.movieID)
         
-        for element in  node.children:
-            self.suggestionsRec(element, word)
+        for element in node.children:
+            self.suggestionsRec(element)
 
             
   
-    def printAutoSuggestions(self, key): 
+    def printAutoSuggestions(self, movieName): 
           
         # Returns all the words in the trie whose common 
-        # prefix is the given key thus listing out all  
+        # prefix is the given movieName thus listing out all  
         # the suggestions for autocomplete. 
         node = self.root 
-        not_found = False
-        temp_word = '' 
+        notFound = False
         printedMovie = False
 
-        for a in list(key): 
-            if not node.children[ord(a)]: 
-                not_found = True
+        for letter in list(movieName): 
+            if not node.children[ord(letter)]: 
+                notFound = True
                 break
   
-            temp_word += a 
-            node = node.children[ord(a)] 
+            node = node.children[ord(letter)] 
   
-        if not_found: 
-            return 0
-        elif node.last and not node.children: 
+        if notFound: 
+            return 
+        elif node.leaf and not node.children: 
             printedMovie = True
 
         if printedMovie == False:
-           node = self.search(key)
-           self.suggestionsRec(node, temp_word) 
-  
-        #    for s in self.word_list: 
-        #        print(s) 
-
-        return 1
+           node = self.search(movieName)
+           self.suggestionsRec(node)  
 
 # Python program for implementation of MergeSort 
-def mergeSort(arr): 
-    if len(arr) >1: 
-        mid = len(arr)//2 #Finding the mid of the array 
-        L = arr[:mid] # Dividing the array elements  
-        R = arr[mid:] # into 2 halves 
+def mergeSort(moviesID): 
+    if len(moviesID) >1: 
+        middle = len(moviesID)//2 #Finding the middle of the moviesIDay 
+        left = moviesID[:middle] # Dividing the moviesIDay elements  
+        rigth = moviesID[middle:] # into 2 halves 
   
-        mergeSort(L) # Sorting the first half 
-        mergeSort(R) # Sorting the second half 
+        mergeSort(left) # Sorting the first half 
+        mergeSort(rigth) # Sorting the second half 
   
-        i = j = k = 0
+        leftCount = 0
+        rigthCount = 0
+        middleCount = 0
           
-        # Copy data to temp arrays L[] and R[] 
-        while i < len(L) and j < len(R): 
-            if L[i].movieRate > R[j].movieRate: 
-                arr[k] = L[i] 
-                i+=1
+        # Copy data to temp moviesIDays L[] and R[] 
+        while leftCount < len(left) and rigthCount < len(rigth): 
+            if left[leftCount].movieRate > rigth[rigthCount].movieRate: 
+                moviesID[middleCount] = left[leftCount] 
+                leftCount+=1
             else: 
-                arr[k] = R[j] 
-                j+=1
-            k+=1
+                moviesID[middleCount] = rigth[rigthCount] 
+                rigthCount+=1
+            middleCount+=1
           
         # Checking if any element was left 
-        while i < len(L): 
-            arr[k] = L[i] 
-            i+=1
-            k+=1
+        while leftCount < len(left): 
+            moviesID[middleCount] = left[leftCount] 
+            leftCount+=1
+            middleCount+=1
           
-        while j < len(R): 
-            arr[k] = R[j] 
-            j+=1
-            k+=1
+        while rigthCount < len(rigth): 
+            moviesID[middleCount] = rigth[rigthCount] 
+            rigthCount+=1
+            middleCount+=1
 
 def filterByGenre(moviesHashTable, userGenre):
     topList = []
@@ -262,13 +230,13 @@ def printTaggedMovies(moviesHashTable, tagList):
               "Rating: " + str(taggedMovies[i].movieRate),
               "Count: " + str(taggedMovies[i].movieCount))
 
-t = Trie() 
-moviesHashTable = H1LinProb(131381) 
+moviesTrieTree = Trie() 
+moviesHashTable = MovieHashTable(131381) 
 # creating the trie structure with the  
 # given set of strings. 
-t.formTrie(moviesHashTable) 
+moviesTrieTree.buildTrie(moviesHashTable) 
   
-# autocompleting the given key using  
+# autocompleting the given movieName using  
 # our trie structure. 
 
 
@@ -279,8 +247,8 @@ while userInput != "exit":
     print("Search movies by typing movie, user, top, or tags")
     userInput = raw_input()
     if "movie " in userInput:
-        t.printAutoSuggestions(userInput[6:])
-        for element in t.word_list:
+        moviesTrieTree.printAutoSuggestions(userInput[6:])
+        for element in moviesTrieTree.movieIDList:
             print(
             "ID: " + moviesHashTable.map[int(element)].movieID,
             "Title: " + moviesHashTable.map[int(element)].movieName,
@@ -288,7 +256,7 @@ while userInput != "exit":
             "Rate: " + str(moviesHashTable.map[int(element)].movieRate),
             "Count: " + str(moviesHashTable.map[int(element)].movieCount)
             )
-        t.word_list = []    
+        moviesTrieTree.movieIDList = []    
     elif "top " in userInput:
         userInput = userInput.split(' ')
         topNumber = userInput[1]
