@@ -1,5 +1,16 @@
 import re
 
+def hashConflictNumber(key):
+    hashvalue = key % 27799
+    return hashvalue
+
+def hashConflictString(key):
+    hashValue = 0
+    for i in range(len(key)):
+        hashValue += (ord(key[i]) * (31**i)) % 27799
+        hashValue %= 27799
+    return hashValue
+
 class movieInfo(object):
     def __init__(self, movieID, movieName, movieGenres):
         self.movieID = movieID
@@ -21,6 +32,7 @@ class userInfo(object):
     def __init__(self, userID):
         self.userID = userID
         self.userRatedMovies = []
+        self.h = []
 
 class MovieHashTable(object):
     """ Busca Linear | h1 """
@@ -30,11 +42,24 @@ class MovieHashTable(object):
         self.used = [False] * self.size
 
     def insere(self,key, movieInfo):
-        self.map[key] = movieInfo
-        self.used[key] = True
+
+        if self.map[key] is None:
+            self.map[key] = movieInfo
+            self.used[key] = True
+        else:
+            hashValue = hashConflictNumber(key)
+            keyValue = [key, movieInfo]
+            self.map[h].append(keyValue)
 
     def pesquisa(self,key):
-        return self.map[key]
+        keyHash = hashConflictNumber(key)
+        if self.map[key] is not None:
+            return self.map[key]
+            for element in self.map[key].movieTags:
+                if keyHash == element:
+                    return None
+            return self.map[key]
+
 
     def remove(self,key):
         if self.map[key] is not None:
@@ -54,11 +79,25 @@ class UserHashTable(object):
         self.used = [False] * self.size
 
     def insere(self,key, userInfo):
-        self.map[key] = userInfo
-        self.used[key] = True
+        if self.map[key] is None:
+            self.map[key] = userInfo
+            self.used[key] = True
+        else:
+            hashValue = hashConflictNumber(key)
+            keyValue = [key, userInfo]
+            self.map[h].append(keyValue)
 
     def pesquisa(self,key):
         return self.map[key]
+        keyHash = hashConflictNumber(key)
+        if self.map[key] is not None:
+            return self.map[key]
+            for element in self.map[key].h:
+                if keyHash == element:
+                    return None
+            return self.map[key]    
+        
+
 
     def remove(self,key):
         if self.map[key] is not None:
@@ -161,7 +200,7 @@ class Trie():
 
         return node 
   
-    def suggestionsRec(self, node): 
+    def moviesRecorded(self, node): 
 
         if node == None:
             return
@@ -170,11 +209,11 @@ class Trie():
             self.movieIDList.append(node.movieID)
         
         for element in node.children:
-            self.suggestionsRec(element)
+            self.moviesRecorded(element)
 
             
   
-    def printAutoSuggestions(self, movieName): 
+    def printPrefixMovies(self, movieName): 
           
         node = self.root 
         notFound = False
@@ -194,7 +233,7 @@ class Trie():
 
         if printedMovie == False:
            node = self.search(movieName)
-           self.suggestionsRec(node)  
+           self.moviesRecorded(node)  
 
 
 def mergeSort(moviesID): 
@@ -298,7 +337,7 @@ while userInput != "exit":
     print("Search movies by typing movie, user, top, or tags")
     userInput = raw_input()
     if "movie " in userInput:
-        moviesTrieTree.printAutoSuggestions(userInput[6:])
+        moviesTrieTree.printPrefixMovies(userInput[6:])
         for element in moviesTrieTree.movieIDList:
             print(
             "ID: " + moviesHashTable.map[int(element)].movieID,
